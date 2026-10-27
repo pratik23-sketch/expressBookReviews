@@ -1,7 +1,7 @@
 
 const express = require('express');
 const axios = require('axios');
-const { generalBooks } = require('./booksdb.js');
+const booksdb = require('./booksdb.js');
 const { isValid, users } = require('./auth_users.js');
 
 const public_users = express.Router();
@@ -33,7 +33,6 @@ public_users.post('/register', (req, res) => {
   }
 
   users.push({ username, password });
-
   return res.status(200).json({
     message: 'User successfully registered'
   });
@@ -101,7 +100,7 @@ public_users.get('/title/:title', async (req, res) => {
 });
 
 public_users.get('/review/:isbn', (req, res) => {
-  const book = require('./booksdb.js')[req.params.isbn];
+  const book = booksdb[req.params.isbn];
 
   if (!book) {
     return res.status(404).json({ message: 'Book not found' });
