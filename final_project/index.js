@@ -17,6 +17,11 @@ app.use("/customer/auth/*", function auth(req,res,next){
 const PORT =5000;
 
 app.use("/customer", customer_routes);
+const books = require('./router/booksdb.js');
+
+app.get('/books-data', (req, res) => {
+  res.status(200).json(books);
+});
 app.use("/", genl_routes);
 
 app.listen(PORT,()=>console.log("Server is running"));
