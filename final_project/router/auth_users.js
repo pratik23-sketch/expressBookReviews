@@ -1,9 +1,11 @@
+
 const express = require('express');
 const jwt = require('jsonwebtoken');
-let books = require("./booksdb.js");
-const regd_users = express.Router();
+const books = require('./booksdb.js');
 
-let users = [];
+const regd_users = express.Router();
+const users = [];
+const JWT_SECRET = 'fingerprint_customer';
 
 const isValid = (username) => {
     return users.some((user) => user.username === username);
@@ -15,40 +17,42 @@ const authenticatedUser = (username, password) => {
     );
 };
 
-regd_users.post("/login", (req, res) => {
+regd_users.post('/login', (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
         return res.status(400).json({
-            message: "Username and password are required"
+            message: 'Username and password are required'
         });
     }
 
-    if (authenticatedUser(username, password)) {
-        const accessToken = jwt.sign({ username: username }, "access", {
-            expiresIn: "1h"
-        });
-
-        req.session.authorization = {
-            accessToken: accessToken,
-            username: username
-        };
-
-        return res.status(200).json({
-            message: "User successfully logged in",
-            token: accessToken
+    if (!authenticatedUser(username, password)) {
+        return res.status(401).json({
+            message: 'Invalid username or password'
         });
     }
 
-    return res.status(401).json({
-        message: "Invalid username or password"
+    const accessToken = jwt.sign(
+        { username: username },
+        JWT_SECRET,
+        { expiresIn: '1h' }
+    );
+
+    req.session.authorization = {
+        accessToken: accessToken,
+        username: username
+    };
+
+    return res.status(200).json({
+        message: 'User successfully logged in',
+        token: accessToken
     });
 });
 
-regd_users.put("/auth/review/:isbn", (req, res) => {
+regd_users.put('/auth/review/:isbn', (req, res) => {
     if (!req.session.authorization) {
         return res.status(401).json({
-            message: "Please login first"
+            message: 'Please login first'
         });
     }
 
@@ -58,13 +62,13 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
 
     if (!books[isbn]) {
         return res.status(404).json({
-            message: "Book not found"
+            message: 'Book not found'
         });
     }
 
-    if (!review) {
+    if (typeof review !== 'string' || !review.trim()) {
         return res.status(400).json({
-            message: "Review is required"
+            message: 'A valid review is required'
         });
     }
 
@@ -72,10 +76,10 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
         books[isbn].reviews = {};
     }
 
-    books[isbn].reviews[username] = review;
+    books[isbn].reviews[username] = review.trim();
 
     return res.status(200).json({
-        message: "Review successfully added"
+        message: 'Review successfully added'
     });
 });
 
